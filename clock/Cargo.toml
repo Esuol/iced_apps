@@ -1,12 +1,15 @@
 [package]
-name = "counter"
+name = "clock"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+publish = false
 
 [dependencies]
-iced = { version = "0.13.0-dev", features = ["webgl"] }
+iced = { version = "0.13.0-dev", features = ["canvas", "tokio", "debug"] }
+
+[dependencies.time]
+version = "0.3"
+features = ["local-offset"]
 
 
 [patch.crates-io]
