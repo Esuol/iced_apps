@@ -1,3 +1,5 @@
+use std::default;
+
 use iced::widget::{checkbox, column, container, row, text};
 use iced::{Element, Font, Length};
 
@@ -15,6 +17,22 @@ enum Message {
     DefaultToggled(bool),
     StyledToggled(bool),
     CustomToggled(bool),
+}
+
+impl Example {
+    fn update(&mut self, message: Message) {
+        match message {
+            Message::DefaultToggled(default) => {
+                self.default = default;
+            }
+            Message::StyledToggled(styled) => {
+                self.styled = styled;
+            }
+            Message::CustomToggled(custom) => {
+                self.custom = custom;
+            }
+        }
+    }
 }
 
 pub fn main() {
