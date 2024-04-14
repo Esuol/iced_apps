@@ -33,6 +33,40 @@ impl Example {
             }
         }
     }
+
+    fn view(&self) -> Element<Message> {
+        let default_checkbox = checkbox("Default", self.default).on_toggle(Message::DefaultToggled);
+        let styled_checkbox = |label| {
+            checkbox(label, self.styled)
+                .on_toggle_maybe(self.default.then_some(Message::StyledToggled))
+        };
+        let checkboxes = row![
+            styled_checkbox("Primary").style(checkbox::primary),
+            styled_checkbox("Secondary").style(checkbox::secondary),
+            styled_checkbox("Success").style(checkbox::success),
+            styled_checkbox("Danger").style(checkbox::danger),
+        ]
+        .spacing(20);
+
+        let custom_checkbox = checkbox("Custom", self.custom)
+            .on_toggle(Message::CustomToggled)
+            .icon(checkbox::Icon {
+                font: ICON_FONT,
+                code_point: '\u{e901}',
+                size: None,
+                line_height: text::LineHeight::Relative(1.0),
+                shaping: text::Shaping::Basic,
+            });
+
+        let content = column![default_checkbox, checkboxes, custom_checkbox,].spacing(20);
+
+        container(content)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .center_x()
+            .center_y()
+            .into()
+    }
 }
 
 pub fn main() {
