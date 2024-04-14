@@ -1,5 +1,3 @@
-use std::default;
-
 use iced::widget::{checkbox, column, container, row, text};
 use iced::{Element, Font, Length};
 
@@ -69,6 +67,8 @@ impl Example {
     }
 }
 
-pub fn main() {
-    print!("hello")
+pub fn main() -> iced::Result {
+    iced::program("Checkbox - Iced", Example::update, Example::view)
+        .font(include_bytes!("../fonts/icons.ttf").as_slice())
+        .run()
 }
