@@ -21,6 +21,55 @@ struct Bezier<'a> {
 
 impl<'a> canvas::Program<Curve> for Bezier<'a> {
     type State = Option<Pending>;
+
+    fn update(
+        &self,
+        state: &mut Self::State,
+        event: Event,
+        bounds: Rectangle,
+        cursor: mouse::Cursor,
+    ) -> (event::Status, Option<Curve>) {
+        let Some(cursor_position) = cursor.position_in(bounds) else {
+            return (event::Status::Ignored, None);
+        };
+
+        match event {
+            Event::Mouse(mouse_event) => {
+                let message = match mouse_event {
+                    mouse::Event::ButtonPressed(mouse::Button::Left) => match *state {
+                        None => {
+                            *state = Some(Pending::One {
+                                from: cursor_position,
+                            });
+
+                            None
+                        }
+                        Some(Pending::One { from }) => {
+                            *state = Some(Pending::Two {
+                                from,
+                                to: cursor_position,
+                            });
+
+                            None
+                        }
+                        Some(Pending::Two { from, to }) => {
+                            *state = None;
+
+                            Some(Curve {
+                                from,
+                                to,
+                                control: cursor_position,
+                            })
+                        }
+                    },
+                    _ => None,
+                };
+
+                (event::Status::Captured, message)
+            }
+            _ => (event::Status::Ignored, None),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -40,5 +89,36 @@ impl Curve {
         });
 
         frame.stroke(&curves, Stroke::default().with_width(2.0));
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+enum Pending {
+    One { from: Point },
+    Two { from: Point, to: Point },
+}
+
+impl Pending {
+    fn draw(&self, renderer: &Renderer, bounds: Rectangle, cursor: mouse::Cursor) -> Geometry {
+        let mut frame = Frame::new(renderer, bounds.size());
+
+        if let Some(cursor_position) = cursor.position_in(bounds) {
+            match *self {
+                Pending::One { from } => {
+                    let line = Path::line(from, cursor_position);
+                    frame.stroke(&line, Stroke::default().with_width(2.0));
+                }
+                Pending::Two { from, to } => {
+                    let curve = Curve {
+                        from,
+                        to,
+                        control: cursor_position,
+                    };
+
+                    Curve::draw_all(&[curve], &mut frame);
+                }
+            };
+        }
+        frame.into_geometry()
     }
 }
