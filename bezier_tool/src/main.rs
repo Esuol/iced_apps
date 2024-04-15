@@ -44,8 +44,8 @@ impl Example {
     }
 }
 
-fn main() {
-    iced::program("Bezier Tool", Example::update, Example::view)
+pub fn main() -> iced::Result {
+    iced::program("Bezier Tool - Iced", Example::update, Example::view)
         .antialiasing(true)
-        .run();
+        .run()
 }
