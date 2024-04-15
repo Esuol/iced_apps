@@ -10,7 +10,17 @@ pub struct State {
 
 impl State {
     pub fn view<'a>(&'a self, curves: &'a [Curve]) -> Element<'a, Curve> {
-        Canvas::new(Bezier {})
+        Canvas::new(Bezier {
+            state: self,
+            curves,
+        })
+        .width(Length::Fill)
+        .height(Length::Fill)
+        .into()
+    }
+
+    pub fn request_redraw(&mut self) {
+        self.cache.clear();
     }
 }
 
@@ -68,6 +78,43 @@ impl<'a> canvas::Program<Curve> for Bezier<'a> {
                 (event::Status::Captured, message)
             }
             _ => (event::Status::Ignored, None),
+        }
+    }
+
+    fn draw(
+        &self,
+        state: &Self::State,
+        renderer: &Renderer,
+        _theme: &Theme,
+        bounds: Rectangle,
+        cursor: mouse::Cursor,
+    ) -> Vec<Geometry> {
+        let content = self.state.cache.draw(renderer, bounds.size(), |frame| {
+            Curve::draw_all(self.curves, frame);
+
+            frame.stroke(
+                &Path::rectangle(Point::ORIGIN, frame.size()),
+                Stroke::default().with_width(2.0),
+            )
+        });
+
+        if let Some(pending) = state {
+            vec![content, pending.draw(renderer, bounds, cursor)]
+        } else {
+            vec![content]
+        }
+    }
+
+    fn mouse_interaction(
+        &self,
+        _state: &Self::State,
+        bounds: Rectangle,
+        cursor: mouse::Cursor,
+    ) -> mouse::Interaction {
+        if cursor.is_over(bounds) {
+            mouse::Interaction::Crosshair
+        } else {
+            mouse::Interaction::default()
         }
     }
 }
