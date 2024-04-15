@@ -15,6 +15,37 @@ enum Message {
     Clear,
 }
 
+impl Example {
+    fn update(&mut self, message: Message) {
+        match message {
+            Message::AddCurve(curve) => {
+                self.curves.push(curve);
+                self.bezier.request_redraw();
+            }
+            Message::Clear => {
+                self.bezier = bezier::State::default();
+                self.curves.clear();
+            }
+        }
+    }
+
+    fn view(&self) -> Element<Message> {
+        column![
+            text("Bezeier too Example").width(Length::Shrink).size(50),
+            self.bezier.view(&self.curves).map(Message::AddCurve),
+            button("Clear")
+                .style(button::danger)
+                .on_press(Message::Clear),
+        ]
+        .padding(20)
+        .spacing(20)
+        .align_items(Alignment::Center)
+        .into()
+    }
+}
+
 fn main() {
-    println!("Hello, world!");
+    iced::program("Bezier Tool", Example::update, Example::vuew)
+        .antialiasing(true)
+        .run();
 }
