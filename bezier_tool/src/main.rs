@@ -31,7 +31,7 @@ impl Example {
 
     fn view(&self) -> Element<Message> {
         column![
-            text("Bezeier too Example").width(Length::Shrink).size(50),
+            text("Bezeier Tool Example").width(Length::Shrink).size(50),
             self.bezier.view(&self.curves).map(Message::AddCurve),
             button("Clear")
                 .style(button::danger)
@@ -45,7 +45,7 @@ impl Example {
 }
 
 fn main() {
-    iced::program("Bezier Tool", Example::update, Example::vuew)
+    iced::program("Bezier Tool", Example::update, Example::view)
         .antialiasing(true)
         .run();
 }
