@@ -86,4 +86,22 @@ where
         .spacing(10)
         .into()
     }
+
+    fn size_hint(&self) -> Size<Length> {
+        Size {
+            width: Length::Fill,
+            height: Length::Shrink,
+        }
+    }
+}
+
+
+impl<'a, Message, Theme> From<NumericInput<Message>> for Element<'a, Message, Theme>
+where
+    Theme: text::Catalog + button::Catalog + text_input::Catalog + 'static,
+    Message: 'a,
+{
+    fn from(numeric_input: NumericInput<Message>) -> Self {
+        component(numeric_input)
+    }
 }
