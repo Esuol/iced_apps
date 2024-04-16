@@ -5,6 +5,45 @@ use iced::{Alignment, Element, Length};
 
 struct Example {
     languages: combo_box::State<Language>,
+    selected_language: Option<Language>,
+    text: String,
+}
+
+#[derive(Debug, Clone, Copy)]
+enum Message {
+    Selected(Language),
+    OptionHovered(Language),
+    Closed,
+}
+
+impl Example {
+    fn new() -> Self {
+        Self {
+            languages: combo_box::State::new(Language::ALL.to_vec()),
+            selected_language: None,
+            text: String::new(),
+        }
+    }
+
+    fn update(&mut self, message: Message) {
+        match message {
+            Message::Selected(language) => {
+                self.selected_language = Some(language);
+                self.text = language.hello().to_string();
+            }
+
+            Message::OptionHovered(language) => {
+                self.text = language.hello().to_string();
+            }
+
+            Message::Closed => {
+                self.text = self
+                    .selected_language
+                    .map(|language| language.hello().to_string())
+                    .unwrap_or_default()
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
