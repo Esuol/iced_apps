@@ -1,3 +1,5 @@
+use std::fmt::write;
+
 use iced::widget::{column, combo_box, container, scrollable, text, vertical_space};
 use iced::{Alignment, Element, Length};
 
@@ -41,6 +43,25 @@ impl Language {
             Language::Spanish => "¡Hola!",
             Language::Other => "... hello?",
         }
+    }
+}
+
+impl std::fmt::Display for Language {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Language::Danish => "Danish",
+                Language::English => "English",
+                Language::French => "French",
+                Language::German => "German",
+                Language::Italian => "Italian",
+                Language::Portuguese => "Portuguese",
+                Language::Spanish => "Spanish",
+                Language::Other => "Some other language",
+            },
+        )
     }
 }
 
