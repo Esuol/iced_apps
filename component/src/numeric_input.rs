@@ -48,13 +48,42 @@ where
                 if value.is_empty() {
                     Some((self.on_change)(None))
                 } else {
-                    value
-                        .parse()
-                        .ok()
-                        .map(Some)
-                        .map(self.on_change.as_ref())
+                    value.parse().ok().map(Some).map(self.on_change.as_ref())
                 }
             }
         }
+    }
+
+    fn view(&self, _state: &Self::State) -> Element<'_, Event, Theme> {
+        let button = |label, on_press| {
+            button(
+                text(label)
+                    .width(Length::Fill)
+                    .height(Length::Fill)
+                    .horizontal_alignment(alignment::Horizontal::Center)
+                    .vertical_alignment(alignment::Vertical::Center),
+            )
+            .width(40)
+            .height(40)
+            .on_press(on_press)
+        };
+
+        row![
+            button("-", Event::DecrementPressed),
+            text_input(
+                "Type a number",
+                self.value
+                    .as_ref()
+                    .map(u32::to_string)
+                    .as_deref()
+                    .unwrap_or(""),
+            )
+            .on_input(Event::InputChanged)
+            .padding(10),
+            button("+", Event::IncrementPressed),
+        ]
+        .align_items(Alignment::Center)
+        .spacing(10)
+        .into()
     }
 }
