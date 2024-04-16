@@ -44,7 +44,37 @@ impl Example {
             }
         }
     }
+
+    fn view(&self) -> Element<Message> {
+        let combo_box = combo_box(
+            &self.languages,
+            "Type a language...",
+            self.selected_language.as_ref(),
+            Message::Selected,
+        )
+        .on_option_hovered(Message::OptionHovered)
+        .on_close(Message::Closed)
+        .width(250);
+
+        let content = column![
+            text(&self.text),
+            "What is your language?",
+            combo_box,
+            vertical_space().height(150)
+        ]
+        .width(Length::Fill)
+        .align_items(Alignment::Center)
+        .spacing(10);
+
+        container(content)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .center_x()
+            .center_y()
+            .into()
+    }
 }
+
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Language {
