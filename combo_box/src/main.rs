@@ -1,6 +1,4 @@
-use std::fmt::write;
-
-use iced::widget::{column, combo_box, container, scrollable, text, vertical_space};
+use iced::widget::{column, combo_box, container, text, vertical_space};
 use iced::{Alignment, Element, Length};
 
 struct Example {
