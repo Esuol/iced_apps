@@ -15,7 +15,33 @@ pub enum Language {
     Italian,
     Portuguese,
     Spanish,
-    Other
+    Other,
+}
+
+impl Language {
+    const ALL: [Language; 8] = [
+        Language::Danish,
+        Language::English,
+        Language::French,
+        Language::German,
+        Language::Italian,
+        Language::Portuguese,
+        Language::Spanish,
+        Language::Other,
+    ];
+
+    fn hello(&self) -> &str {
+        match self {
+            Language::Danish => "Halloy!",
+            Language::English => "Hello!",
+            Language::French => "Salut!",
+            Language::German => "Hallo!",
+            Language::Italian => "Ciao!",
+            Language::Portuguese => "Olá!",
+            Language::Spanish => "¡Hola!",
+            Language::Other => "... hello?",
+        }
+    }
 }
 
 fn main() {
