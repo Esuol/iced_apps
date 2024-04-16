@@ -75,6 +75,11 @@ impl Example {
     }
 }
 
+impl Default for Example {
+    fn default() -> Self {
+        Example::new()
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Language {
@@ -134,6 +139,6 @@ impl std::fmt::Display for Language {
     }
 }
 
-fn main() {
-    println!("Hello, world!");
+fn main() -> iced::Result {
+    iced::run("combo box - iced", Example::update, Example::view)
 }
