@@ -1,12 +1,12 @@
 [package]
-name = "game_of_life"
+name = "custom_quad"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-iced = { version = "0.13.0-dev", features = ["debug", "canvas", "tokio"] }
+iced = { version = "0.13.0-dev", features = ["advanced"] }
 
 
 [patch.crates-io]
