@@ -52,6 +52,23 @@ where
         _cursor: mouse::Cursor,
         _viewport: &Rectangle,
     ) {
-      
+        renderer.fill_quad(
+            renderer::Quad {
+                bounds: layout.bounds(),
+                border: Border {
+                    radius: self.radius.into(),
+                    width: self.border_width,
+                    color: Color::from_rgb(1.0, 0.0, 0.0),
+                },
+                shadow: self.shadow,
+            },
+            Color::BLACK,
+        );
     }
+}
+
+impl<'a, Message> From<CustomQuad> for Element<'a, Message> {
+  fn from(circle: CustomQuad) -> Self {
+      Self::new(circle)
+  }
 }
