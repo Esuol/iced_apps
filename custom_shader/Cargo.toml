@@ -1,0 +1,18 @@
+[package]
+name = "custom_shader"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bytemuck = "1.15.0"
+glam = "0.27.0"
+iced = { version = "0.13.0-dev", features = ["advanced", "debug"] }
+image = "0.25.1"
+rand = "0.8.5"
+
+
+[patch.crates-io]
+iced = { git = "https://github.com/iced-rs/iced", rev = "31d1d5fecbef50fa319cabd5d4194f1e4aaefa21" }
+iced_core = { git = "https://github.com/iced-rs/iced", rev = "31d1d5fecbef50fa319cabd5d4194f1e4aaefa21" }
