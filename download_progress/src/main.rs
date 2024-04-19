@@ -76,6 +76,45 @@ impl Download {
             _ => Subscription::none(),
         }
     }
+
+    pub fn view(&self) -> Element<Message> {
+        let current_progress = match &self.state {
+            State::Idle { .. } => 0.0,
+            State::Downloading { progress } => *progress,
+            State::Finished { .. } => 100.0,
+            State::Errored { .. } => 0.0,
+        };
+
+        let progress_bar = progress_bar(0.0..=100.0, current_progress);
+
+        let control: Element<_> = match &self.state {
+            State::Idle => button("Start the download!")
+                .on_press(Message::Download(self.id))
+                .into(),
+            State::Finished => column!["Download finished", button("Start again")]
+                .spacing(10)
+                .align_items(Alignment::Center)
+                .into(),
+            State::Downloading { .. } => {
+                text(format!("Downloading... {current_progress:.2}%")).into()
+            }
+            State::Errored => column![
+                "Something went wrong :(",
+                button("Try again").on_press(Message::Download(self.id)),
+            ]
+            .spacing(10)
+            .align_items(Alignment::Center)
+            .into(),
+        };
+
+        Column::new()
+            .spacing(10)
+            .padding(10)
+            .align_items(Alignment::Center)
+            .push(progress_bar)
+            .push(control)
+            .into()
+    }
 }
 
 fn main() {
