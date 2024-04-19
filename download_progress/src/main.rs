@@ -3,7 +3,7 @@ mod download;
 use iced::widget::{button, column, container, progress_bar, text, Column};
 use iced::{Alignment, Element, Length, Subscription};
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 struct Example {
     downloads: Vec<Download>,
     last_id: usize,
@@ -58,7 +58,7 @@ impl Example {
             .spacing(20)
             .align_items(Alignment::End);
 
-        container::new(downloads)
+        container(downloads)
             .width(Length::Fill)
             .height(Length::Fill)
             .center_x()
@@ -68,7 +68,7 @@ impl Example {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Message {
     Add,
     Download(usize),
@@ -107,13 +107,13 @@ impl Download {
     }
 
     pub fn progress(&mut self, new_progress: download::Progress) {
-        if let State::Downloading { progress } = &mut self.state() {
+        if let State::Downloading { progress } = &mut self.state {
             match new_progress {
                 download::Progress::Started => {
                     *progress = 0.0;
                 }
-                download::Progress::Advanced(p) => {
-                    *progress = p;
+                download::Progress::Advanced(percentage) => {
+                    *progress = percentage;
                 }
                 download::Progress::Finished => {
                     self.state = State::Finished;
@@ -175,7 +175,7 @@ impl Download {
     }
 }
 
-fn main() {
+fn main() -> iced::Result {
     iced::program("Download Progress - Iced", Example::update, Example::view)
         .subscription(Example::subscription)
         .run()
