@@ -40,13 +40,40 @@ impl Download {
     }
 
     pub fn start(&mut self) {
-        match  self.state {
-            State::Idle { .. }
-                | State::Finished {..}
-                | State::Errored {..} => {
-                    self.state = State::Downloading { progress: 0.0 };
+        match self.state {
+            State::Idle { .. } | State::Finished { .. } | State::Errored { .. } => {
+                self.state = State::Downloading { progress: 0.0 };
+            }
+            State::Downloading { .. } => {}
+        }
+    }
+
+    pub fn progress(&mut self, new_progress: download::Progress) {
+        if let State::Downloading { progress } = &mut self.state() {
+            match new_progress {
+                download::Progress::Started => {
+                    *progress = 0.0;
                 }
-                State::Downloading { .. } => {}
+                download::Progress::Advanced(p) => {
+                    *progress = p;
+                }
+                download::Progress::Finished => {
+                    self.state = State::Finished;
+                }
+                download::Progress::Errored => {
+                    self.state = State::Errored;
+                }
+            }
+        }
+    }
+
+    pub fn subscription(&self) -> Subscription<Message> {
+        match self.state {
+            State::Downloading { .. } => {
+                download::file(self.id, "https://speed.hetzner.de/100MB.bin?")
+                    .map(Message::DownloadProgressed)
+            }
+            _ => Subscription::none(),
         }
     }
 }
