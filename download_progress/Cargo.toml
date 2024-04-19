@@ -1,0 +1,19 @@
+[package]
+name = "download_progress"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+iced = { version = "0.13.0-dev", features = ["tokio"] }
+
+[dependencies.reqwest]
+version = "0.12.0"
+default-features = false
+features = ["rustls-tls"]
+
+
+[patch.crates-io]
+iced = { git = "https://github.com/iced-rs/iced", rev = "31d1d5fecbef50fa319cabd5d4194f1e4aaefa21" }
+iced_core = { git = "https://github.com/iced-rs/iced", rev = "31d1d5fecbef50fa319cabd5d4194f1e4aaefa21" }
