@@ -1,6 +1,8 @@
 use iced::subscription;
+
 use std::hash::Hash;
 
+// Just a little utility function
 pub fn file<I: 'static + Hash + Copy + Send + Sync, T: ToString>(
     id: I,
     url: T,
@@ -33,7 +35,6 @@ async fn download<I: Copy>(id: I, state: State) -> ((I, Progress), State) {
                 Err(_) => ((id, Progress::Errored), State::Finished),
             }
         }
-
         State::Downloading {
             mut response,
             total,
@@ -42,10 +43,10 @@ async fn download<I: Copy>(id: I, state: State) -> ((I, Progress), State) {
             Ok(Some(chunk)) => {
                 let downloaded = downloaded + chunk.len() as u64;
 
-                let progress = (downloaded as f32 / total as f32) * 100.0;
+                let percentage = (downloaded as f32 / total as f32) * 100.0;
 
                 (
-                    (id, Progress::Adnvanced(progress)),
+                    (id, Progress::Advanced(percentage)),
                     State::Downloading {
                         response,
                         total,
@@ -56,14 +57,19 @@ async fn download<I: Copy>(id: I, state: State) -> ((I, Progress), State) {
             Ok(None) => ((id, Progress::Finished), State::Finished),
             Err(_) => ((id, Progress::Errored), State::Finished),
         },
-        State::Finished => iced::futures::future::pending().await,
+        State::Finished => {
+            // We do not let the stream die, as it would start a
+            // new download repeatedly if the user is not careful
+            // in case of errors.
+            iced::futures::future::pending().await
+        }
     }
 }
 
 #[derive(Debug, Clone)]
 pub enum Progress {
     Started,
-    Adnvanced(f32),
+    Advanced(f32),
     Finished,
     Errored,
 }

@@ -1,6 +1,5 @@
 mod download;
 
-use iced::overlay::menu::State;
 use iced::widget::{button, column, container, progress_bar, text, Column};
 use iced::{Alignment, Element, Length, Subscription};
 
@@ -8,6 +7,65 @@ use iced::{Alignment, Element, Length, Subscription};
 struct Example {
     downloads: Vec<Download>,
     last_id: usize,
+}
+
+impl Default for Example {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Example {
+    fn new() -> Self {
+        Self {
+            downloads: vec![Download::new(0)],
+            last_id: 0,
+        }
+    }
+
+    fn update(&mut self, message: Message) {
+        match message {
+            Message::Add => {
+                self.last_id += 1;
+                self.downloads.push(Download::new(self.last_id));
+            }
+
+            Message::Download(id) => {
+                if let Some(download) = self.downloads.get_mut(id) {
+                    download.start()
+                }
+            }
+
+            Message::DownloadProgressed((id, progress)) => {
+                if let Some(download) = self.downloads.iter_mut().find(|d| d.id == id) {
+                    download.progress(progress)
+                }
+            }
+        }
+    }
+
+    fn subscription(&self) -> Subscription<Message> {
+        Subscription::batch(self.downloads.iter().map(Download::subscription))
+    }
+
+    fn view(&self) -> Element<Message> {
+        let downloads = Column::with_children(self.downloads.iter().map(Download::view))
+            .push(
+                button("Add another download")
+                    .on_press(Message::Add)
+                    .padding(10),
+            )
+            .spacing(20)
+            .align_items(Alignment::End);
+
+        container::new(downloads)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .center_x()
+            .center_y()
+            .padding(20)
+            .into()
+    }
 }
 
 #[derive(Debug)]
@@ -91,7 +149,7 @@ impl Download {
             State::Idle => button("Start the download!")
                 .on_press(Message::Download(self.id))
                 .into(),
-            State::Finished => column!["Download finished", button("Start again")]
+            State::Finished => column!["Download finished!", button("Start again")]
                 .spacing(10)
                 .align_items(Alignment::Center)
                 .into(),
@@ -118,5 +176,7 @@ impl Download {
 }
 
 fn main() {
-    println!("Hello, world!");
+    iced::program("Download Progress - Iced", Example::update, Example::view)
+        .subscription(Example::subscription)
+        .run()
 }
