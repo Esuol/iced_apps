@@ -172,6 +172,26 @@ async fn save_file(
     Ok(path)
 }
 
+fn action<'a, Message: Clone + 'a>(
+    content: impl Into<Element<'a, Message>>,
+    label: &'a str,
+    on_press: Option<Message>
+) -> Element<'a, Message> {
+    let action = button(container(content).width(30).center_x());
+
+    if let Some(on_press) = on_press {
+        tooltip(
+            action.on_press(on_press),
+            label,
+            tooltip::Position::FollowCursor,
+        )
+        .style(container::rounded_box)
+        .into()
+    } else {
+        action.style(button::secondary).into()
+    }
+}
+
 fn main() {
     println!("Hello, world!");
 }
