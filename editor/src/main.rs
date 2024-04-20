@@ -5,6 +5,7 @@ use iced::widget::{
 }
 use iced::{Alignment, Command, Element, Font, Length, Subscription, Theme};
 
+use core::error;
 use std::ffi;
 use std::io;
 use std::{Path, PathBuf};
@@ -114,6 +115,40 @@ impl Editor {
         }
     }
 }
+
+impl Default for Editor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum Error {
+    DialogClosed,
+    IoError(io::ErrorKind),
+}
+
+async fn open_file() -> Result<(PathBuf, Arc<String>), Error> {
+    let picked_file = rfd::AsyncFileDialog::new()
+    .set_title("Open a text File")
+    .pick_file()
+    .await
+    .ok_or(Error::DialogClosed)?;
+
+    load_file(picked_file).await
+}
+
+async fn load_file(path: impl Into<PathBuf>) -> Result<(PathBuf, Arc<String>), Error> {
+    let path = path.into();
+
+    let contents = tokio::fs::read_to_string(&path)
+    .await
+    .map(Arc::new)
+    .map_err(|error| Error::IoError(error.kind()))?;
+
+    Ok((path, contents))
+}
+
 
 fn main() {
     println!("Hello, world!");
