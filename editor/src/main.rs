@@ -1,14 +1,13 @@
-use iced::highlighter::{self, highlighter};
+use iced::highlighter::{self, Highlighter};
 use iced::keyboard;
 use iced::widget::{
-    button, column, container, horizotal_scroll, pick_list, row, text, text_editor, tooltip
-}
+    button, column, container, horizontal_space, pick_list, row, text, text_editor, tooltip,
+};
 use iced::{Alignment, Command, Element, Font, Length, Subscription, Theme};
 
-use core::error;
-use std::{ffi, path};
+use std::ffi;
 use std::io;
-use std::{Path, PathBuf};
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 struct Editor {
@@ -27,7 +26,7 @@ enum Message {
     OpenFile,
     FileOpened(Result<(PathBuf, Arc<String>), Error>),
     SaveFile,
-    FileSaved(Result<PathBuf, Error>)
+    FileSaved(Result<PathBuf, Error>),
 }
 
 impl Editor {
@@ -58,6 +57,12 @@ impl Editor {
                 Command::none()
             }
 
+            Message::ThemeSelected(theme) => {
+                self.theme = theme;
+
+                Command::none()
+            }
+
             Message::NewFile => {
                 if !self.is_loading {
                     self.file = None;
@@ -69,7 +74,7 @@ impl Editor {
 
             Message::OpenFile => {
                 if self.is_loading {
-                   Command::none()
+                    Command::none()
                 } else {
                     self.is_loading = true;
 
@@ -97,7 +102,7 @@ impl Editor {
 
                     Command::perform(
                         save_file(self.file.clone(), self.content.text()),
-                        Message::FileOpened
+                        Message::FileSaved,
                     )
                 }
             }
@@ -117,11 +122,88 @@ impl Editor {
 
     fn subscription(&self) -> Subscription<Message> {
         keyboard::on_key_press(|key, modifiers| match key.as_ref() {
-            keyboard::Key::Character("s") if modifiers.command() => {
-                Some(Message::SaveFile)
-            }
-            _ => None
+            keyboard::Key::Character("s") if modifiers.command() => Some(Message::SaveFile),
+            _ => None,
         })
+    }
+
+    fn view(&self) -> Element<Message> {
+        let controls = row![
+            action(new_icon(), "New File", Some(Message::NewFile)),
+            action(
+                open_icon(),
+                "Open File",
+                (!self.is_loading).then_some(Message::OpenFile)
+            ),
+            action(
+                save_icon(),
+                "Save File",
+                self.is_dirty.then_some(Message::SaveFile)
+            ),
+            horizontal_space(),
+            pick_list(
+                highlighter::Theme::ALL,
+                Some(self.theme),
+                Message::ThemeSelected
+            )
+            .text_size(14)
+            .padding([5, 10])
+        ]
+        .spacing(10)
+        .align_items(Alignment::Center);
+
+        let status = row![
+            text(if let Some(path) = &self.file {
+                let path = path.display().to_string();
+
+                if path.len() > 60 {
+                    format!("...{}", &path[path.len() - 40..])
+                } else {
+                    path
+                }
+            } else {
+                String::from("New File")
+            }),
+            horizontal_space(),
+            text({
+                let (line, column) = self.content.cursor_position();
+
+                format!("{}:{}", line + 1, column + 1)
+            })
+        ]
+        .spacing(10);
+
+        column![
+            controls,
+            text_editor(&self.content)
+                .height(Length::Fill)
+                .on_action(Message::ActionPerformed)
+                .highlight::<Highlighter>(
+                    highlighter::Settings {
+                        theme: self.theme,
+                        extension: self
+                            .file
+                            .as_deref()
+                            .and_then(Path::extension)
+                            .and_then(ffi::OsStr::to_str)
+                            .map(str::to_string)
+                            .unwrap_or(String::from("rs")),
+                    },
+                    |highlight, _theme| highlight.to_format()
+                ),
+            status
+        ]
+        .spacing(10)
+        .padding(10)
+        .into()
+    }
+
+    fn theme(&self) -> Theme {
+        if self.theme.is_dark() {
+            Theme::Dark
+        } else {
+            Theme::Light
+        }
     }
 }
 
@@ -139,10 +221,10 @@ pub enum Error {
 
 async fn open_file() -> Result<(PathBuf, Arc<String>), Error> {
     let picked_file = rfd::AsyncFileDialog::new()
-    .set_title("Open a text File")
-    .pick_file()
-    .await
-    .ok_or(Error::DialogClosed)?;
+        .set_title("Open a text File")
+        .pick_file()
+        .await
+        .ok_or(Error::DialogClosed)?;
 
     load_file(picked_file).await
 }
@@ -151,32 +233,29 @@ async fn load_file(path: impl Into<PathBuf>) -> Result<(PathBuf, Arc<String>), E
     let path = path.into();
 
     let contents = tokio::fs::read_to_string(&path)
-    .await
-    .map(Arc::new)
-    .map_err(|error| Error::IoError(error.kind()))?;
+        .await
+        .map(Arc::new)
+        .map_err(|error| Error::IoError(error.kind()))?;
 
     Ok((path, contents))
 }
 
-async fn save_file(
-    path: Option<PathBuf>,
-    contents: String
-) -> Result<PathBuf, Error> {
+async fn save_file(path: Option<PathBuf>, contents: String) -> Result<PathBuf, Error> {
     let path = if let Some(path) = path {
         path
     } else {
         rfd::AsyncFileDialog::new()
-        .save_file()
-        .await
-        .as_ref()
-        .map(rfd::FileHandle::path)
-        .map(Path::to_owned)
-        .ok_or(Error::DialogClosed)?
+            .save_file()
+            .await
+            .as_ref()
+            .map(rfd::FileHandle::path)
+            .map(Path::to_owned)
+            .ok_or(Error::DialogClosed)?
     };
 
     tokio::fs::write(&path, contents)
-    .await
-    .map_err(|error| Error::IoError(error.kind()))?;
+        .await
+        .map_err(|error| Error::IoError(error.kind()))?;
 
     Ok(path)
 }
@@ -184,7 +263,7 @@ async fn save_file(
 fn action<'a, Message: Clone + 'a>(
     content: impl Into<Element<'a, Message>>,
     label: &'a str,
-    on_press: Option<Message>
+    on_press: Option<Message>,
 ) -> Element<'a, Message> {
     let action = button(container(content).width(30).center_x());
 
