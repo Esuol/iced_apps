@@ -298,6 +298,12 @@ fn open_icon<'a, Message>() -> Element<'a, Message> {
     icon('\u{0f115}')
 }
 
-fn main() {
-    println!("Hello, world!");
+fn main() -> iced::Result {
+    iced::program("Editor - Iced", Editor::update, Editor::view)
+        .load(Editor::load)
+        .subscription(Editor::subscription)
+        .theme(Editor::theme)
+        .font(include_bytes!("../fonts/icons.ttf").as_slice())
+        .default_font(Font::MONOSPACE)
+        .run()
 }
