@@ -6,7 +6,7 @@ use iced::widget::{
 use iced::{Alignment, Command, Element, Font, Length, Subscription, Theme};
 
 use core::error;
-use std::ffi;
+use std::{ffi, path};
 use std::io;
 use std::{Path, PathBuf};
 use std::sync::Arc;
@@ -149,6 +149,28 @@ async fn load_file(path: impl Into<PathBuf>) -> Result<(PathBuf, Arc<String>), E
     Ok((path, contents))
 }
 
+async fn save_file(
+    path: Option<PathBuf>,
+    contents: String
+) -> Result<PathBuf, Error> {
+    let path = if let Some(path) = path {
+        path
+    } else {
+        rfd::AsyncFileDialog::new()
+        .save_file()
+        .await
+        .as_ref()
+        .map(rfd::FileHandle::path)
+        .map(Path::to_owned)
+        .ok_or(Error::DialogClosed)?
+    };
+
+    tokio::fs::write(&path, contents)
+    .await
+    .map_err(|error| Error::IoError(error.kind()))?;
+
+    Ok(path)
+}
 
 fn main() {
     println!("Hello, world!");
