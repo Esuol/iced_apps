@@ -50,6 +50,40 @@ impl Events {
     fn subscription(&self) -> Subscription<Message> {
         event::listen().map(Message::EventOccurred)
     }
+
+    fn view(&self) -> Element<Message> {
+        let events = Column::with_children(
+            self.last
+                .iter()
+                .map(|event| text(format!("{event:?}")).size(40))
+                .map(Element::from),
+        );
+
+        let toggle = checkbox("Listen to runtime events", self.enabled).on_toggle(Message::Toggled);
+
+        let exit = button(
+            text("Exit")
+                .width(Length::Fill)
+                .horizontal_alignment(alignment::Horizontal::Center),
+        )
+        .width(100)
+        .padding(10)
+        .on_press(Message::Exit);
+
+        let content = Column::new()
+            .align_items(Alignment::Center)
+            .spacing(20)
+            .push(events)
+            .push(toggle)
+            .push(exit);
+
+        container(content)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .center_x()
+            .center_y()
+            .into()
+    }
 }
 
 fn main() {
