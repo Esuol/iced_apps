@@ -86,6 +86,9 @@ impl Events {
     }
 }
 
-fn main() {
-    println!("Hello, world!");
+fn main() -> iced::Result {
+    iced::program("Events - iced", Events::update, Events::view)
+        .subscription(Events::subscription)
+        .exit_on_close_request(false)
+        .run()
 }
