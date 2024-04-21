@@ -20,7 +20,7 @@ enum Message {
 impl Events {
     fn update(&mut self, message: Message) -> Command<Message> {
         match message {
-            Message::EventOccurred(event) => {
+            Message::EventOccurred(event) if self.enabled => {
                 self.last.push(event);
 
                 if self.last.len() > 5 {
@@ -45,6 +45,10 @@ impl Events {
 
             Message::Exit => window::close(window::Id::MAIN),
         }
+    }
+
+    fn subscription(&self) -> Subscription<Message> {
+        event::listen().map(Message::EventOccurred)
     }
 }
 
