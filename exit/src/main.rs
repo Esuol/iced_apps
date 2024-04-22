@@ -28,4 +28,22 @@ impl Exit {
             }
         }
     }
+
+    fn view(&self) -> Element<Message> {
+        let content = if self.show_confirm {
+            column![
+                "Are you sure want to exit?",
+                button("yes, exit now")
+                    .padding([10, 20])
+                    .on_press(Message::Confirm),
+            ]
+        } else {
+            column![
+                "Click the button to exit",
+                button("Exit").padding([10, 20]).on_press(Message::Exit),
+            ]
+            .spacing(10)
+            .align_items(Alignment::Center)
+        };
+    }
 }
