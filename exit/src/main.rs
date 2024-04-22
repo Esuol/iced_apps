@@ -2,8 +2,8 @@ use iced::widget::{button, column, container};
 use iced::window;
 use iced::{Alignment, Command, Element, Length};
 
-fn main() {
-    println!("Hello, world!");
+fn main() -> iced::Result {
+    iced::program("Exit", Exit::update, Exit::view).run()
 }
 
 #[derive(Default)]
@@ -45,5 +45,13 @@ impl Exit {
             .spacing(10)
             .align_items(Alignment::Center)
         };
+
+        container(content)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .padding(20)
+            .center_x()
+            .center_y()
+            .into()
     }
 }
