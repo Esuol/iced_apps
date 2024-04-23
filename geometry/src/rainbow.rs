@@ -16,7 +16,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Rainbow {
     fn size(&self) -> Size<Length> {
         Size {
             width: Length::Fill,
-            height: Length::Fill,
+            height: Length::Shrink,
         }
     }
 
