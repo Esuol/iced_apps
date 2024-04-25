@@ -117,5 +117,10 @@ fn color_picker(label: &str, color: Color) -> Element<'_, Color> {
 }
 
 fn main() {
-    println!("Hello, world!");
+    tracing_subscriber::fmt::init();
+
+    iced::program("Gradient - Iced", Gradient::update, Gradient::view)
+        .style(Gradient::style)
+        .transparent(true)
+        .run()
 }
