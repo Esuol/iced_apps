@@ -2,12 +2,13 @@ mod controls;
 mod scene;
 
 use controls::Controls;
-use iced::clipboard;
 use iced::keyboard::Modifiers;
+use iced::{clipboard, Font, Pixels};
 use iced_wgpu::graphics::futures::backend::default;
 use iced_wgpu::graphics::Viewport;
 use iced_wgpu::wgpu::naga::back;
 use iced_wgpu::{wgpu, Engine, Renderer};
+use iced_widget::runtime::Debug;
 use iced_winit::core::{mouse, renderer, window, Color, Font, Pixels, Size, Theme};
 use iced_winit::runtime::{Debug, Program};
 use iced_winit::{conversion, futures, winit, Clipboard};
@@ -122,4 +123,180 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             queue,
         )
     });
+
+    surface.configure(
+        &device,
+        &wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format,
+            width: physical_size.width,
+            height: physical_size.height,
+            present_mode: wgpu::PresentMode::AutoVsync,
+            alpha_mode: wgpu::CompositeAlphaMode::Auto,
+            view_formats: vec![],
+            desired_maximum_frame_latency: 2,
+        },
+    );
+
+    let mut resized = false;
+
+    // Initialize scene and GUI controls
+    let scene = Scene::new(&device, format);
+    let controls = Controls::new();
+
+    // Initialize iced
+    let mut debug = Debug::new();
+    let mut engine = Engine::new(&adapter, &device, &queue, format, None);
+    let mut renderer = Renderer::new(&engine, Font::default(), Pixels::from(16));
+
+    let mut state =
+        program::State::new(controls, viewport.logical_size(), &mut renderer, &mut debug);
+
+    // Run event loop
+    event_loop.run(move |event, window_target| {
+        // You should change this if you want to render continuously
+        window_target.set_control_flow(ControlFlow::Wait);
+
+        match event {
+            Event::WindowEvent {
+                event: WindowEvent::RedrawRequested,
+                ..
+            } => {
+                if resized {
+                    let size = window.inner_size();
+
+                    viewport = Viewport::with_physical_size(
+                        Size::new(size.width, size.height),
+                        window.scale_factor(),
+                    );
+
+                    surface.configure(
+                        &device,
+                        &wgpu::SurfaceConfiguration {
+                            format,
+                            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                            width: size.width,
+                            height: size.height,
+                            present_mode: wgpu::PresentMode::AutoVsync,
+                            alpha_mode: wgpu::CompositeAlphaMode::Auto,
+                            view_formats: vec![],
+                            desired_maximum_frame_latency: 2,
+                        },
+                    );
+
+                    resized = false;
+                }
+
+                match surface.get_current_texture() {
+                    Ok(frame) => {
+                        let mut encoder =
+                            device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                                label: None,
+                            });
+
+                        let program = state.program();
+
+                        let view = frame
+                            .texture
+                            .create_view(&wgpu::TextureViewDescriptor::default());
+
+                        {
+                            // We clear the frame
+                            let mut render_pass =
+                                Scene::clear(&view, &mut encoder, program.background_color());
+
+                            // Draw the scene
+                            scene.draw(&mut render_pass);
+                        }
+
+                        // And then iced on top
+                        renderer.present(
+                            &mut engine,
+                            &device,
+                            &queue,
+                            &mut encoder,
+                            None,
+                            frame.texture.format(),
+                            &view,
+                            &viewport,
+                            &debug.overlay(),
+                        );
+
+                        // Then we submit the work
+                        queue.submit(Some(encoder.finish()));
+                        frame.present();
+
+                        // Update the mouse cursor
+                        window.set_cursor_icon(iced_winit::conversion::mouse_interaction(
+                            state.mouse_interaction(),
+                        ));
+                    }
+                    Err(error) => match error {
+                        wgpu::SurfaceError::OutOfMemory => {
+                            panic!(
+                                "Swapchain error: {error}. \
+                                Rendering cannot continue."
+                            )
+                        }
+                        _ => {
+                            // Try rendering again next frame.
+                            window.request_redraw();
+                        }
+                    },
+                }
+            }
+            Event::WindowEvent { event, .. } => {
+                match event {
+                    WindowEvent::CursorMoved { position, .. } => {
+                        cursor_position = Some(position);
+                    }
+                    WindowEvent::ModifiersChanged(new_modifiers) => {
+                        modifiers = new_modifiers.state();
+                    }
+                    WindowEvent::Resized(_) => {
+                        resized = true;
+                    }
+                    WindowEvent::CloseRequested => {
+                        window_target.exit();
+                    }
+                    _ => {}
+                }
+
+                // Map window event to iced event
+                if let Some(event) = iced_winit::conversion::window_event(
+                    window::Id::MAIN,
+                    event,
+                    window.scale_factor(),
+                    modifiers,
+                ) {
+                    state.queue_event(event);
+                }
+            }
+            _ => {}
+        }
+
+        // If there are events pending
+        if !state.is_queue_empty() {
+            // We update iced
+            let _ = state.update(
+                viewport.logical_size(),
+                cursor_position
+                    .map(|p| conversion::cursor_position(p, viewport.scale_factor()))
+                    .map(mouse::Cursor::Available)
+                    .unwrap_or(mouse::Cursor::Unavailable),
+                &mut renderer,
+                &Theme::Dark,
+                &renderer::Style {
+                    text_color: Color::WHITE,
+                },
+                &mut clipboard,
+                &mut debug,
+            );
+
+            // and request a redraw
+            window.request_redraw();
+        }
+    })?;
+
+    Ok(())
 }
