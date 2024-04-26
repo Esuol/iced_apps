@@ -6,3 +6,28 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+iced = { version = "0.13.0-dev" }
+iced_wgpu = { version = "0.13.0-dev" }
+iced_widget = { version = "0.13.0-dev" }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tracing-subscriber = "0.3"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+iced_wgpu = { version = "0.13.0-dev", features = ["webgl"] }
+
+console_error_panic_hook = "0.1"
+console_log = "1.0"
+wasm-bindgen = "0.2"
+web-sys = { version = "0.3", features = [
+  "Element",
+  "HtmlCanvasElement",
+  "Window",
+  "Document",
+] }
+
+[patch.crates-io]
+iced = { git = "https://github.com/iced-rs/iced", rev = "31d1d5fecbef50fa319cabd5d4194f1e4aaefa21" }
+iced_core = { git = "https://github.com/iced-rs/iced", rev = "31d1d5fecbef50fa319cabd5d4194f1e4aaefa21" }
+iced_wgpu = { git = "https://github.com/iced-rs/iced", rev = "31d1d5fecbef50fa319cabd5d4194f1e4aaefa21" }
+iced_widget = { git = "https://github.com/iced-rs/iced", rev = "31d1d5fecbef50fa319cabd5d4194f1e4aaefa21" }
