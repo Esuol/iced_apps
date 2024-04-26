@@ -1,6 +1,3 @@
-use iced::{Command, Length};
-use iced_wgpu::core::Element;
-use iced_wgpu::wgpu::naga::back;
 use iced_wgpu::Renderer;
 use iced_widget::{column, container, row, slider, text, text_input};
 use iced_winit::core::alignment;
@@ -81,11 +78,11 @@ impl Program for Controls {
         container(
             column![
                 text("Background color").color(Color::WHITE),
-                text(format!("{background_color?"))
+                text(format!("{background_color:?}"))
                     .size(14)
                     .color(Color::WHITE),
-                text_input("placeholder", &self.input).on_input(Message::InputChanged),
-                sliders
+                text_input("Placeholder", &self.input).on_input(Message::InputChanged),
+                sliders,
             ]
             .spacing(10),
         )
