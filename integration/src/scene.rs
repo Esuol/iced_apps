@@ -41,6 +41,11 @@ impl Scene {
         occlusion_query_set: None,
        })
     }
+
+    pub fn draw<'a>(&'a self, render_pass: &mut wgpu::RenderPass<'a>) {
+        render_pass.set_pipeline(&self.pipeline);
+        render_pass.draw(0..3, 0..1);
+    }
 }
 
 fn build_pipeline(
