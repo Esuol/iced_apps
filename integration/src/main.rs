@@ -77,7 +77,8 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(not(target_arch = "wasm32"))]
     let default_backend = wgpu::Backends::PRIMARY;
 
-    let backend = wgpu::util::backend_bits_from_env().unwrap_or(default_backend);
+    let backend =
+        wgpu::util::backend_bits_from_env().unwrap_or(default_backend);
 
     let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
         backends: backend,
@@ -85,47 +86,52 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
     let surface = instance.create_surface(window.clone())?;
 
-    let (format, adapter, device, queue) = futures::futures::executor::block_on(async {
-        let adapter = wgpu::util::initialize_adapter_from_env_or_default(&instance, Some(&surface))
+    let (format, adapter, device, queue) =
+        futures::futures::executor::block_on(async {
+            let adapter = wgpu::util::initialize_adapter_from_env_or_default(
+                &instance,
+                Some(&surface),
+            )
             .await
             .expect("Create adapter");
 
-        let adapter_features = adapter.features();
+            let adapter_features = adapter.features();
 
-        #[cfg(target_arch = "wasm32")]
-        let needed_limits =
-            wgpu::Limits::downlevel_webgl2_defaults().using_resolution(adapter.limits());
+            #[cfg(target_arch = "wasm32")]
+            let needed_limits = wgpu::Limits::downlevel_webgl2_defaults()
+                .using_resolution(adapter.limits());
 
-        #[cfg(not(target_arch = "wasm32"))]
-        let needed_limits = wgpu::Limits::default();
+            #[cfg(not(target_arch = "wasm32"))]
+            let needed_limits = wgpu::Limits::default();
 
-        let capabilities = surface.get_capabilities(&adapter);
+            let capabilities = surface.get_capabilities(&adapter);
 
-        let (device, queue) = adapter
-            .request_device(
-                &wgpu::DeviceDescriptor {
-                    label: None,
-                    required_features: adapter_features & wgpu::Features::default(),
-                    required_limits: needed_limits,
-                },
-                None,
+            let (device, queue) = adapter
+                .request_device(
+                    &wgpu::DeviceDescriptor {
+                        label: None,
+                        required_features: adapter_features
+                            & wgpu::Features::default(),
+                        required_limits: needed_limits,
+                    },
+                    None,
+                )
+                .await
+                .expect("Request device");
+
+            (
+                capabilities
+                    .formats
+                    .iter()
+                    .copied()
+                    .find(wgpu::TextureFormat::is_srgb)
+                    .or_else(|| capabilities.formats.first().copied())
+                    .expect("Get preferred format"),
+                adapter,
+                device,
+                queue,
             )
-            .await
-            .expect("Request device");
-
-        (
-            capabilities
-                .formats
-                .iter()
-                .copied()
-                .find(wgpu::TextureFormat::is_srgb)
-                .or_else(|| capabilities.formats.first().copied())
-                .expect("Get preferred format"),
-            adapter,
-            device,
-            queue,
-        )
-    });
+        });
 
     surface.configure(
         &device,
@@ -150,10 +156,15 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize iced
     let mut debug = Debug::new();
     let mut engine = Engine::new(&adapter, &device, &queue, format, None);
-    let mut renderer = Renderer::new(&engine, Font::default(), Pixels::from(16));
+    let mut renderer =
+        Renderer::new(&engine, Font::default(), Pixels::from(16));
 
-    let mut state =
-        program::State::new(controls, viewport.logical_size(), &mut renderer, &mut debug);
+    let mut state = program::State::new(
+        controls,
+        viewport.logical_size(),
+        &mut renderer,
+        &mut debug,
+    );
 
     // Run event loop
     event_loop.run(move |event, window_target| {
@@ -192,21 +203,23 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 match surface.get_current_texture() {
                     Ok(frame) => {
-                        let mut encoder =
-                            device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                                label: None,
-                            });
+                        let mut encoder = device.create_command_encoder(
+                            &wgpu::CommandEncoderDescriptor { label: None },
+                        );
 
                         let program = state.program();
 
-                        let view = frame
-                            .texture
-                            .create_view(&wgpu::TextureViewDescriptor::default());
+                        let view = frame.texture.create_view(
+                            &wgpu::TextureViewDescriptor::default(),
+                        );
 
                         {
                             // We clear the frame
-                            let mut render_pass =
-                                Scene::clear(&view, &mut encoder, program.background_color());
+                            let mut render_pass = Scene::clear(
+                                &view,
+                                &mut encoder,
+                                program.background_color(),
+                            );
 
                             // Draw the scene
                             scene.draw(&mut render_pass);
@@ -230,9 +243,11 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
                         frame.present();
 
                         // Update the mouse cursor
-                        window.set_cursor_icon(iced_winit::conversion::mouse_interaction(
-                            state.mouse_interaction(),
-                        ));
+                        window.set_cursor_icon(
+                            iced_winit::conversion::mouse_interaction(
+                                state.mouse_interaction(),
+                            ),
+                        );
                     }
                     Err(error) => match error {
                         wgpu::SurfaceError::OutOfMemory => {
@@ -284,7 +299,9 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
             let _ = state.update(
                 viewport.logical_size(),
                 cursor_position
-                    .map(|p| conversion::cursor_position(p, viewport.scale_factor()))
+                    .map(|p| {
+                        conversion::cursor_position(p, viewport.scale_factor())
+                    })
                     .map(mouse::Cursor::Available)
                     .unwrap_or(mouse::Cursor::Unavailable),
                 &mut renderer,
