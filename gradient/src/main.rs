@@ -1,7 +1,16 @@
+use iced::gradient;
+use iced::program;
 use iced::widget::{checkbox, column, container, horizontal_space, row, slider, text};
-use iced::Program;
-use iced::{gradient, program};
 use iced::{Alignment, Color, Element, Length, Radians, Theme};
+
+pub fn main() -> iced::Result {
+    tracing_subscriber::fmt::init();
+
+    iced::program("Gradient - Iced", Gradient::update, Gradient::view)
+        .style(Gradient::style)
+        .transparent(true)
+        .run()
+}
 
 #[derive(Debug, Clone, Copy)]
 struct Gradient {
@@ -13,8 +22,8 @@ struct Gradient {
 
 #[derive(Debug, Clone, Copy)]
 enum Message {
-    StartColorChanged(Color),
-    EndColorChanged(Color),
+    StartChanged(Color),
+    EndChanged(Color),
     AngleChanged(Radians),
     TransparentToggled(bool),
 }
@@ -22,7 +31,7 @@ enum Message {
 impl Gradient {
     fn new() -> Self {
         Self {
-            start: Color::BLACK,
+            start: Color::WHITE,
             end: Color::new(0.0, 0.0, 1.0, 1.0),
             angle: Radians(0.0),
             transparent: false,
@@ -82,7 +91,7 @@ impl Gradient {
         .into()
     }
 
-    fn styke(&self, theme: &Theme) -> program::Appearance {
+    fn style(&self, theme: &Theme) -> program::Appearance {
         use program::DefaultStyle;
 
         if self.transparent {
@@ -114,13 +123,4 @@ fn color_picker(label: &str, color: Color) -> Element<'_, Color> {
     .padding(8)
     .align_items(Alignment::Center)
     .into()
-}
-
-fn main() {
-    tracing_subscriber::fmt::init();
-
-    iced::program("Gradient - Iced", Gradient::update, Gradient::view)
-        .style(Gradient::style)
-        .transparent(true)
-        .run()
 }
