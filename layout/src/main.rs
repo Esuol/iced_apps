@@ -2,6 +2,7 @@ use std::ops::Sub;
 
 use iced::keyboard;
 use iced::mouse;
+use iced::widget::keyed::column;
 use iced::widget::{
     button, canvas, checkbox, column, container, horizontal_space, pick_list, row, scrollable, text,
 };
@@ -150,6 +151,46 @@ impl Default for Example {
     fn default() -> Self {
         Self::LIST[0]
     }
+}
+
+fn centered<'a>() -> Element<'static, Message> {
+    container(text("I am centered!").size(50))
+        .width(Length::Fill)
+        .height(Length::Fill)
+        .center_x()
+        .center_y()
+        .into()
+}
+
+fn column_<'a>() -> Element<'static, Message> {
+    column![
+        "A column can be used to",
+        "lay out widgets vertically.",
+        square(50),
+        square(50),
+        square(50),
+        "The amount of space between",
+        "elements can be configured!",
+    ]
+    .spacing(40)
+    .into()
+}
+
+fn row_<'a>() -> Element<'a, Message> {
+    row![
+        "A row works like a column...",
+        square(50),
+        square(50),
+        square(50),
+        "but lays out widgets horizontally!",
+    ]
+    .spacing(40)
+    .into()
+}
+
+
+fn space<'a>() -> Element<'a, Message> {
+    row!["Left!", horizontal_space(), "Right!"].into()
 }
 
 fn main() {
