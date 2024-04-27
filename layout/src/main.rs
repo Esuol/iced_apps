@@ -1,8 +1,5 @@
-use std::ops::Sub;
-
 use iced::keyboard;
 use iced::mouse;
-use iced::widget::keyed::column;
 use iced::widget::{
     button, canvas, checkbox, column, container, horizontal_space, pick_list, row, scrollable, text,
 };
@@ -27,7 +24,7 @@ enum Message {
 
 impl Layout {
     fn title(&self) -> String {
-        format!("{} - Layout - Iced", self.example.title())
+        format!("{} - Layout - Iced", self.example.title)
     }
 
     fn update(&mut self, message: Message) {
@@ -59,7 +56,7 @@ impl Layout {
 
     fn view(&self) -> Element<Message> {
         let header = row![
-            text(self.example.title).size(20).font(Font.MONOSPACE),
+            text(self.example.title).size(20).font(Font::MONOSPACE),
             horizontal_space(),
             checkbox("Explain", self.explain).on_toggle(Message::ExplainToggked),
             pick_list(Theme::ALL, Some(&self.theme), Message::ThemeSelected),
@@ -79,9 +76,36 @@ impl Layout {
         })
         .padding(4)
         .width(Length::Fill)
-        .height(Length.Fill)
+        .height(Length::Fill)
         .center_x()
         .center_y();
+
+        let controls = row([
+            (!self.example.is_first()).then_some(
+                button("← Previous")
+                    .padding([5, 10])
+                    .on_press(Message::Previous)
+                    .into(),
+            ),
+            Some(horizontal_space().into()),
+            (!self.example.is_last()).then_some(
+                button("Next →")
+                    .padding([5, 10])
+                    .on_press(Message::Next)
+                    .into(),
+            ),
+        ]
+        .into_iter()
+        .flatten());
+
+        column![header, example, controls]
+            .spacing(10)
+            .padding(20)
+            .into()
+    }
+
+    fn theme(&self) -> Theme {
+        self.theme.clone()
     }
 }
 
@@ -188,17 +212,51 @@ fn row_<'a>() -> Element<'a, Message> {
     .into()
 }
 
-
 fn space<'a>() -> Element<'a, Message> {
     row!["Left!", horizontal_space(), "Right!"].into()
 }
 
-fn application<'a> -> Element<'a Message> {
+fn application<'a>() -> Element<'a, Message> {
     let header = container(
         row![
             square(40),
+            horizontal_space(),
+            "Header!",
+            horizontal_space(),
+            square(40),
         ]
+        .padding(10)
+        .align_items(Alignment::Center),
     )
+    .style(|theme| {
+        let palette = theme.extended_palette();
+
+        container::Style::default().with_border(palette.background.strong.color, 1)
+    });
+
+    let sidebar = container(
+        column!["Sidebar!", square(50), square(50)]
+            .spacing(40)
+            .padding(10)
+            .width(200)
+            .align_items(Alignment::Center),
+    )
+    .style(container::rounded_box)
+    .height(Length::Fill)
+    .center_y();
+
+    let content = container(
+        scrollable(
+            column!["Content!", square(400), square(200), square(400), "The end"]
+                .spacing(40)
+                .align_items(Alignment::Center)
+                .width(Length::Fill),
+        )
+        .height(Length::Fill),
+    )
+    .padding(10);
+
+    column![header, row![sidebar, content]].into()
 }
 
 fn square<'a>(size: impl Into<Length> + Copy) -> Element<'a, Message> {
@@ -214,18 +272,26 @@ fn square<'a>(size: impl Into<Length> + Copy) -> Element<'a, Message> {
             theme: &Theme,
             bounds: Rectangle,
             _cursor: mouse::Cursor,
-            ) -> Vec<canvas::Geometry> {
-                let mut frame = canvas::Frame::new(renderer, bounds.size());
+        ) -> Vec<canvas::Geometry> {
+            let mut frame = canvas::Frame::new(renderer, bounds.size());
 
-                let palette = theme.extended_palette();
+            let palette = theme.extended_palette();
 
-                frame.fill_rectangle(Point::ORIGIN, bounds.size(), palette.background.strong.color);
+            frame.fill_rectangle(
+                Point::ORIGIN,
+                bounds.size(),
+                palette.background.strong.color,
+            );
 
-                vec![frame.into_geometry()]
+            vec![frame.into_geometry()]
         }
     }
+
+    canvas(Square).width(size).height(size).into()
 }
 
-fn main() {
-    println!("Hello, world!");
+fn main() {iced::program(Layout::title, Layout::update, Layout::view)
+    .subscription(Layout::subscription)
+    .theme(Layout::theme)
+    .run() println!("Hello, world!");
 }
