@@ -8,6 +8,24 @@ use iced::{
 };
 
 
+#[derive(Default, Debug)]
+struct Layout {
+    example: Example,
+    explain: bool,
+    theme: Theme
+}
+
+#[derive(Debug, Clone)]
+enum Message {
+    Next,
+    Previous,
+    ExplainToggked(bool),
+    ThemeSelected(Theme),
+}
+
+impl Layout {
+    
+}
 
 fn main() {
     println!("Hello, world!");
