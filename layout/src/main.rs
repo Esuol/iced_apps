@@ -290,8 +290,9 @@ fn square<'a>(size: impl Into<Length> + Copy) -> Element<'a, Message> {
     canvas(Square).width(size).height(size).into()
 }
 
-fn main() {iced::program(Layout::title, Layout::update, Layout::view)
-    .subscription(Layout::subscription)
-    .theme(Layout::theme)
-    .run() println!("Hello, world!");
+fn main() -> iced::Result {
+    iced::program(Layout::title, Layout::update, Layout::view)
+        .subscription(Layout::subscription)
+        .theme(Layout::theme)
+        .run()
 }
